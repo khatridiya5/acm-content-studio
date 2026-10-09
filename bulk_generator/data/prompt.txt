@@ -1,0 +1,34 @@
+Design an ID card for an event as a single, self-contained SVG file. Return ONLY the raw SVG code, with no explanation and no markdown fences.
+
+EVENT DETAILS (decided by the client)
+- Event name: <<EVENT>>
+- Theme / mood / colors: <<THEME>>
+- Organizer: ACM NIT Surat (student tech club)
+- Extra notes: <<NOTES>>
+
+DESIGN
+- Create a visual style, color palette, layout and decorative elements that clearly reflect the event and its theme.
+- Show the event name on the card as static text (not a placeholder).
+- Modern, professional, print-ready. Every text element must be easy to read, must not overlap other elements, and must not leave the card.
+
+TECHNICAL RULES (mandatory)
+- Orientation: <<ORIENTATION>>. Use exactly: width="<<W>>mm" height="<<H>>mm" viewBox="0 0 <<W>> <<H>>". All coordinates are in mm.
+- Include xmlns="http://www.w3.org/2000/svg" and xmlns:xlink="http://www.w3.org/1999/xlink" on the svg tag.
+- Fonts: only Arial, Helvetica, sans-serif.
+- Must render in CairoSVG: no external resources, no scripts, no CSS animations, no <foreignObject>, no filters, no masks. Gradients, clipPath and simple shapes are fine.
+- Keep important content at least 3 mm inside the edges. Background shapes may reach the edges.
+- Clip everything to the card rectangle with a clipPath.
+
+REQUIRED PLACEHOLDERS (copy exactly, each used once)
+- {{name}}        : full name as text. Most prominent text. Must stay readable for ~18 characters.
+- {{position}}    : text (e.g. "Technical Lead")
+- {{department}}  : text, up to ~32 characters
+- {{roll_no}}     : text (e.g. "U23CS101")
+- {{photo}}       : the href of the person's photo:
+  <image x=".." y=".." width=".." height=".." preserveAspectRatio="xMidYMid slice" clip-path="url(#photoClip)" xlink:href="{{photo}}"/>
+  Define photoClip in <defs> to match a shaped frame (circle, rounded rect, hexagon...), with a grey fallback shape behind it.
+- __LOGO__        : the club logo, placed prominently, exactly like:
+  <image x=".." y=".." width=".." height=".." preserveAspectRatio="xMidYMid meet" xlink:href="data:image/png;base64,__LOGO__"/>
+  The logo is a blue diamond with "acm NIT SURAT" on a transparent background. Choose colors that work with it.
+
+Do not add any other {{placeholders}} and do not replace these with sample data.
