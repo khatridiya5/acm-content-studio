@@ -8,4 +8,4 @@ export function downloadBlob(name: string, blob: Blob) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
-export const exportSvg = (svg: string) => downloadBlob('id-card.svg', new Blob([svg], { type: 'image/svg+xml' }));
+export const exportSvg = (svg: string, name = 'id-card') => downloadBlob(`${name}.svg`, new Blob([svg], { type: 'image/svg+xml' }));
