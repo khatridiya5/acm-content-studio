@@ -18,6 +18,7 @@ interface Ctx {
   sel: number; setSel: (v: number) => void;
   people: Person[]; isSample: boolean; loadPeople: (p: Person[]) => void;
   pi: number; setPi: (v: number) => void; person: Person;
+  setPreviewPhoto: (url: string) => void;
 }
 const C = createContext<Ctx | null>(null);
 export const useStudio = () => {
@@ -60,6 +61,9 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   }, [ready, prompt, info, msgs, plans, sel, pi, people, isSample]);
 
   const loadPeople = (p: Person[]) => { setPeople(p); setIsSample(false); setPi(0); };
+  const setPreviewPhoto = (url: string) => {
+    setPeople((prev) => prev.map((p) => ({ ...p, photo: url })));
+  };
 
   const generate = async () => {
     setLoading(true); setNotice('');
@@ -88,7 +92,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     <C.Provider value={{
       prompt, setPrompt, info, setInfo, event: info.name ?? '', setEvent: (v) => setInfo({ ...info, name: v }),
       msgs, setMsgs, plans, plan: plans[sel], updatePlan, generate, refine, loading, notice,
-      sel, setSel, people, isSample, loadPeople, pi, setPi, person,
+      sel, setSel, people, isSample, loadPeople, pi, setPi, person, setPreviewPhoto,
     }}>
       {children}
     </C.Provider>

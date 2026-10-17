@@ -1,4 +1,4 @@
-export type Role = 'participant' | 'organizer' | 'mentor' | 'volunteer';
+export type Role = 'participant' | 'organizer' | 'mentor' | 'volunteer' | 'executive';
 export type FieldKey = 'name' | 'role' | 'roll' | 'department' | 'year' | 'photo' | 'qr';
 
 export interface Person {
@@ -18,6 +18,8 @@ export interface EventInfo {
   tagline?: string | null; // null = user chose to skip
   fields?: FieldKey[];
   hasPhotos?: boolean;
+  customPreviewPhoto?: boolean;
+  previewPhoto?: string | null;
 }
 
 export type TextSlot = 'name' | 'role' | 'id' | 'event' | 'department' | 'year' | 'date' | 'venue' | 'tagline';
@@ -40,4 +42,4 @@ export interface DesignPlan {
   elements: Element[];
   svg?: string;
 }
-
+

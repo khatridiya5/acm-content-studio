@@ -10,6 +10,7 @@ export const ROLE_COLORS: Record<Role, string> = {
   organizer: '#ff6b35',
   mentor: '#7bd389',
   volunteer: '#c77dff',
+  executive: '#f59e0b',
 };
 
 export const FIELD_OPTIONS: { key: FieldKey; label: string }[] = [
@@ -24,10 +25,10 @@ export const FIELD_OPTIONS: { key: FieldKey; label: string }[] = [
 
 // TEST DATA ONLY. Shown until a real CSV is uploaded.
 export const SAMPLE_PEOPLE: Person[] = [
-  { name: 'Sample Participant', role: 'participant', id: 'U00XX001', department: 'Computer Science', year: '2' },
-  { name: 'Sample Organizer', role: 'organizer', id: 'U00XX002', department: 'Electronics', year: '3' },
-  { name: 'Dr. Sample Mentor With A Very Long Name', role: 'mentor', id: 'U00XX003', department: 'Artificial Intelligence', year: '-' },
-  { name: 'Sample Volunteer', role: 'volunteer', id: 'U00XX004', department: 'Mechanical', year: '1' },
+  { name: 'Sample Participant', role: 'participant', id: 'U00XX001', department: 'Computer Science', year: '2', photo: '/people/img_3.jpg' },
+  { name: 'Sample Organizer', role: 'organizer', id: 'U00XX002', department: 'Electronics', year: '3', photo: '/people/img_3.jpg' },
+  { name: 'Dr. Sample Mentor With A Very Long Name', role: 'mentor', id: 'U00XX003', department: 'Artificial Intelligence', year: '-', photo: '/people/img_3.jpg' },
+  { name: 'Sample Volunteer', role: 'volunteer', id: 'U00XX004', department: 'Mechanical', year: '1', photo: '/people/img_3.jpg' },
 ];
 
 export const THEMES = [

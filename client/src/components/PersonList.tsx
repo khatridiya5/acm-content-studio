@@ -1,72 +1,69 @@
 'use client';
-import { useState } from 'react';
-import { useStudio } from '@/lib/StudioContext';
-import { renderCard } from '@/core/engine/render';
-import { exportSvg } from '@/core/exporter/svg';
-import { exportPng } from '@/core/exporter/png';
-import { exportPdf } from '@/core/exporter/pdf';
-import type { Layout } from '@/core/exporter/sheet';
+import { Person } from '@/types';
+import { ROLE_COLORS } from '@/lib/constants';
 
-const sel = 'rounded-lg border border-white/10 bg-neutral-900 px-3 py-1.5 text-sm';
+interface Props {
+  people: Person[];
+  index: number;
+  onSelect: (i: number) => void;
+}
 
-export default function ExportPanel() {
-  const { plan, people, person, info, isSample } = useStudio();
-  const [format, setFormat] = useState<'pdf' | 'png' | 'svg'>('pdf');
-  const [scope, setScope] = useState<'one' | 'all'>('one');
-  const [dpi, setDpi] = useState(300);
-  const [layout, setLayout] = useState<Layout>('single');
-  const [marks, setMarks] = useState(true);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-  if (!plan) return null;
-
-  const go = async () => {
-    setBusy(true); setErr('');
-    try {
-      const list = scope === 'one' ? [person] : people;
-      const svgs = list.map((p, i) => renderCard(plan, p, info, 's' + i));
-      if (format === 'pdf') await exportPdf(svgs, layout, plan.size, marks, scope === 'one' ? person.id : 'id-cards');
-      else for (let i = 0; i < list.length; i++) {
-        if (format === 'svg') exportSvg(svgs[i], list[i].id);
-        else await exportPng(svgs[i], plan, dpi, list[i].id);
-        await new Promise((r) => setTimeout(r, 300));
-      }
-    } catch (e) { setErr(e instanceof Error ? e.message : 'Export failed'); }
-    setBusy(false);
-  };
+export default function PersonList({ people, index, onSelect }: Props) {
+  if (!people || people.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      {isSample && <p className="text-sm text-amber-300">These are sample people. Upload your CSV in step 2 before printing.</p>}
-      <div className="flex flex-wrap gap-2">
-        <select className={sel} value={format} onChange={(e) => setFormat(e.target.value as typeof format)}>
-          <option value="pdf">PDF (print)</option><option value="png">PNG</option><option value="svg">SVG</option>
-        </select>
-        <select className={sel} value={scope} onChange={(e) => setScope(e.target.value as typeof scope)}>
-          <option value="one">Selected person</option><option value="all">Everyone ({people.length})</option>
-        </select>
-        {format === 'png' && (
-          <select className={sel} value={dpi} onChange={(e) => setDpi(+e.target.value)}>
-            <option value={150}>150 DPI</option><option value={300}>300 DPI</option><option value={600}>600 DPI</option>
-          </select>
-        )}
-        {format === 'pdf' && (
-          <>
-            <select className={sel} value={layout} onChange={(e) => setLayout(e.target.value as Layout)}>
-              <option value="single">One card per page</option><option value="A4">A4 sheet</option><option value="A3">A3 sheet</option>
-            </select>
-            {layout !== 'single' && (
-              <label className="flex items-center gap-1.5 text-sm text-neutral-300">
-                <input type="checkbox" checked={marks} onChange={(e) => setMarks(e.target.checked)} /> Crop marks
-              </label>
-            )}
-          </>
-        )}
+    <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-neutral-300">
+          Attendees ({people.length})
+        </h2>
+        <span className="text-xs text-neutral-400">Click a person to preview their card</span>
       </div>
-      <button onClick={go} disabled={busy} className="rounded-xl bg-violet-600 px-5 py-2.5 font-semibold disabled:opacity-40">
-        {busy ? 'Exporting…' : 'Export'}
-      </button>
-      {err && <p className="text-sm text-red-400">{err}</p>}
+
+      <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+        {people.map((p, i) => {
+          const isSelected = i === index;
+          const roleColor = ROLE_COLORS[p.role] || '#888888';
+          const photoUrl = p.photo || '/people/img_3.jpg';
+
+          return (
+            <button
+              key={`${p.id}_${i}`}
+              onClick={() => onSelect(i)}
+              className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
+                isSelected
+                  ? 'border border-violet-500 bg-violet-500/10 text-white'
+                  : 'border border-transparent bg-white/5 text-neutral-300 hover:bg-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={photoUrl}
+                  alt={p.name}
+                  className="h-8 w-8 rounded-full object-cover border border-white/10"
+                  onError={(e) => {
+                    // Fallback to default if error
+                    (e.target as HTMLImageElement).src = '/people/img_3.jpg';
+                  }}
+                />
+                <div className="truncate">
+                  <p className="font-medium truncate">{p.name}</p>
+                  <p className="text-xs text-neutral-400">
+                    {p.id} {p.department ? `• ${p.department}` : ''}
+                  </p>
+                </div>
+              </div>
+
+              <span
+                className="ml-2 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-black"
+                style={{ backgroundColor: roleColor }}
+              >
+                {p.role}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

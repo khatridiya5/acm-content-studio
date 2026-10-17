@@ -81,7 +81,7 @@ function parseSvgItems(svgString: string): { items: SvgItem[]; W: number; H: num
       let label = 'Image';
       if (href.includes('acm_logo') || href.includes('__LOGO__')) label = 'ACM Logo';
       else if (href.includes('svnit_logo')) label = 'SVNIT Logo';
-      else if (href.includes('{{photo}}')) label = 'Photo';
+      else if (href.includes('{{photo}}') || href.includes('/people/') || href.startsWith('data:image')) label = 'Photo';
       else if (href.includes('{{qr}}')) label = 'QR Code';
 
       const x = parseFloat(el.getAttribute('x') || '0');
@@ -124,8 +124,10 @@ function mutateSvg(
   }
 }
 
-export default function CardEditor({ plan, onChange }: Props) {
+export default function CardEditor({ plan, person, onChange }: Props) {
   const currentSvg = typeof plan === 'string' ? plan : plan.svg || '';
+  const photoUrl = person?.photo || '/people/img_3.jpg';
+  const displaySvg = currentSvg.replace(/\{\{photo\}\}/g, photoUrl);
   const [selId, setSelId] = useState<string | null>(null);
   const [hist, setHist] = useState<string[]>([]);
   const drag = useRef<DragState | null>(null);
@@ -349,7 +351,7 @@ export default function CardEditor({ plan, onChange }: Props) {
   return (
     <div className="space-y-3">
       <div ref={box} className="relative w-[300px] max-w-full touch-none select-none [&_svg]:h-auto [&_svg]:w-full [&_svg]:rounded-2xl shadow-xl">
-        <div dangerouslySetInnerHTML={{ __html: currentSvg }} />
+        <div dangerouslySetInnerHTML={{ __html: displaySvg }} />
         <svg className="absolute inset-0 h-full w-full pointer-events-none" viewBox={`0 0 ${W} ${H}`}>
           {items.map((item) => (
             <rect key={item.id} x={item.b.x} y={item.b.y} width={item.b.w} height={item.b.h} fill="transparent" pointerEvents="all"

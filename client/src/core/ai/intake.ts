@@ -3,22 +3,29 @@ import { EventInfo, FieldKey } from '@/types';
 import { FIELD_OPTIONS } from '@/lib/constants';
 
 export interface Question {
-  key: 'name' | 'date' | 'venue' | 'tagline' | 'fields' | 'hasPhotos';
+  key: 'name' | 'date' | 'venue' | 'tagline' | 'fields' | 'customPreviewPhoto' | 'previewPhoto';
   q: string;
-  kind: 'text' | 'multi' | 'yesno';
+  kind: 'text' | 'multi' | 'yesno' | 'file';
   optional?: boolean;
 }
 
-export const QUESTIONS: Question[] = [
-  { key: 'name', q: 'What is the event name?', kind: 'text' },
-  { key: 'date', q: 'When is it? (date or dates)', kind: 'text' },
-  { key: 'venue', q: 'Where is it held (venue)?', kind: 'text' },
-  { key: 'tagline', q: 'Do you have a tagline? Type it, or press Skip.', kind: 'text', optional: true },
-  { key: 'fields', q: 'Which details should appear on each card?', kind: 'multi' },
-  { key: 'hasPhotos', q: 'Will you upload photos for the people?', kind: 'yesno' },
-];
-
-export const missing = (info: EventInfo) => QUESTIONS.filter((q) => info[q.key] === undefined);
+export const missing = (info: EventInfo): Question[] => {
+  const result: Question[] = [];
+  if (info.name === undefined) result.push({ key: 'name', q: 'What is the event name?', kind: 'text' });
+  if (info.date === undefined) result.push({ key: 'date', q: 'When is it? (date or dates)', kind: 'text' });
+  if (info.venue === undefined) result.push({ key: 'venue', q: 'Where is it held (venue)?', kind: 'text' });
+  if (info.tagline === undefined) result.push({ key: 'tagline', q: 'Do you have a tagline? Type it, or press Skip.', kind: 'text', optional: true });
+  if (info.fields === undefined) {
+    result.push({ key: 'fields', q: 'Which details should appear on each card?', kind: 'multi' });
+  } else if (info.hasPhotos) {
+    if (info.customPreviewPhoto === undefined) {
+      result.push({ key: 'customPreviewPhoto', q: 'Will you upload photos for the people?', kind: 'yesno' });
+    } else if (info.customPreviewPhoto === true && info.previewPhoto === undefined) {
+      result.push({ key: 'previewPhoto', q: 'Please upload a sample JPG photo to use for card previews:', kind: 'file' });
+    }
+  }
+  return result;
+};
 
 const VALID = FIELD_OPTIONS.map((f) => f.key);
 
@@ -36,7 +43,11 @@ export function mergeInfo(info: EventInfo, got: Record<string, unknown>, userTex
   }
   if (next.fields === undefined && Array.isArray(got.fields)) {
     const f = got.fields.filter((x): x is FieldKey => VALID.includes(x as FieldKey));
-    if (f.length) { next.fields = f; found.push(`fields: ${f.join(', ')}`); }
+    if (f.length) {
+      next.fields = f;
+      next.hasPhotos = f.includes('photo');
+      found.push(`fields: ${f.join(', ')}`);
+    }
   }
   return { info: next, found };
 }
