@@ -3,7 +3,7 @@
 import { DesignPlan, EventInfo, Person, TextSlot } from '@/types';
 import { QR_BASE, ROLE_COLORS } from '@/lib/constants';
 import { LOGO_ACM, LOGO_SVNIT } from '@/core/brand/logos';
-import { qrMatrix } from '@/core/data/qrgrid';
+import { qrMatrix } from '@/core/data/qr';
 import { fitText } from './fit';
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));

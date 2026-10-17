@@ -28,7 +28,7 @@ export default function Step3() {
 
   return (
     <section className="space-y-5 pt-6">
-      <p className="text-sm text-violet-400">Step 3 of 4</p>
+      <p className="text-sm text-violet-400">Step 2 of 4</p>
       <h1 className="text-3xl font-bold tracking-tight">Pick a draft and tweak it</h1>
       {notice && <p className="text-sm text-amber-300">{notice}</p>}
       <PersonList people={people} index={pi} onSelect={setPi} />
@@ -45,8 +45,8 @@ export default function Step3() {
         </div>
         <CardEditor plan={plan} person={person} info={info} onChange={updatePlan} />
       </div>
-      <button onClick={() => router.push('/studio/export')} className="w-full rounded-xl bg-violet-600 py-3.5 text-lg font-semibold hover:bg-violet-500">
-        Continue to export →
+      <button onClick={() => router.push('/studio/people')} className="w-full rounded-xl bg-violet-600 py-3.5 text-lg font-semibold hover:bg-violet-500">
+        Continue to attendees →
       </button>
     </section>
   );

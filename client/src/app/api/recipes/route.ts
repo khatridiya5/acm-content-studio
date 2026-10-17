@@ -1,16 +1,15 @@
 import { generatePlans } from '@/core/ai/gemini';
-import { makePlans } from '@/core/ai/mock';
 
 export async function POST(req: Request) {
   const { prompt, info } = await req.json();
-  if (!prompt || typeof prompt !== 'string') return Response.json({ message: 'Describe the cards first.' }, { status: 400 });
-  try {
-    return Response.json(await generatePlans(prompt.slice(0, 2000), info ?? {}));
-  } catch (e) {
-    return Response.json({
-      plans: makePlans(prompt, info ?? {}),
-      source: 'fallback',
-      notice: `Gemini was not available (${e instanceof Error ? e.message.slice(0, 120) : 'error'}). Showing basic templates.`,
-    });
+  if (!prompt || typeof prompt !== 'string') {
+    return Response.json({ message: 'Describe the cards first.' }, { status: 400 });
   }
+
+  console.log('[POST /api/recipes] Request received. Prompt:', prompt.slice(0, 120), '| Info:', info);
+  const result = await generatePlans(prompt.slice(0, 2000), info ?? {});
+  console.log('[POST /api/recipes] Generated plans source:', result.source, '| Plan count:', result.plans?.length, '| Notice:', result.notice || 'none');
+
+  return Response.json(result);
 }
+

@@ -38,4 +38,6 @@ export interface DesignPlan {
   font: string;
   size: { w: number; h: number }; // mm
   elements: Element[];
+  svg?: string;
 }
+

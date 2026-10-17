@@ -14,6 +14,7 @@ export default function Step1() {
   const router = useRouter();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [picked, setPicked] = useState<FieldKey[]>([]);
 
   const pending = prompt ? missing(info)[0] : undefined;
@@ -42,7 +43,12 @@ export default function Step1() {
     push({ from: 'user', text: label }, { from: 'bot', text: next(merged) });
   };
 
-  const go = () => { generate(); router.push('/studio/people'); };
+  const go = async () => {
+    setGenerating(true);
+    await generate();
+    setGenerating(false);
+    router.push('/studio/drafts');
+  };
   const ready = !!prompt && !pending;
 
   return (
@@ -104,9 +110,9 @@ export default function Step1() {
         )}
       </div>
 
-      <button onClick={go} disabled={!ready}
+      <button onClick={go} disabled={!ready || generating}
         className="mt-6 w-full rounded-xl bg-violet-600 py-3.5 text-lg font-semibold hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40">
-        Generate drafts →
+        {generating ? 'Generating drafts…' : 'Generate drafts →'}
       </button>
     </section>
   );

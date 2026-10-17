@@ -4,8 +4,8 @@ import { usePathname } from 'next/navigation';
 
 const STEPS = [
   { href: '/studio', label: 'Describe' },
-  { href: '/studio/people', label: 'Preview with' },
   { href: '/studio/drafts', label: 'Pick a draft' },
+  { href: '/studio/people', label: 'Attendees' },
   { href: '/studio/export', label: 'Export' },
 ];
 

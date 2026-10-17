@@ -49,29 +49,24 @@ export function StudioProvider({ children }: { children: ReactNode }) {
       if (s.sel != null) setSel(s.sel);
       if (s.people?.length) { setPeople(s.people); setIsSample(!!s.isSample); }
       if (s.pi != null) setPi(s.pi);
-    } catch {}
+    } catch { }
     setReady(true);
   }, []);
   useEffect(() => {
     if (!ready) return;
     const base = { prompt, info, msgs, plans, sel, pi, isSample };
     try { sessionStorage.setItem('studio2', JSON.stringify({ ...base, people })); }
-    catch { try { sessionStorage.setItem('studio2', JSON.stringify({ ...base, people: people.map((p) => ({ ...p, photo: null })) })); } catch {} }
+    catch { try { sessionStorage.setItem('studio2', JSON.stringify({ ...base, people: people.map((p) => ({ ...p, photo: null })) })); } catch { } }
   }, [ready, prompt, info, msgs, plans, sel, pi, people, isSample]);
 
   const loadPeople = (p: Person[]) => { setPeople(p); setIsSample(false); setPi(0); };
 
   const generate = async () => {
     setLoading(true); setNotice('');
-    try {
-      const r = await fetch('/api/recipes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt, info }) });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.message ?? 'failed');
-      setPlans(d.plans); setNotice(d.notice ?? '');
-    } catch {
-      setPlans(makePlans(prompt, info));
-      setNotice('Could not reach the design service, so basic templates are shown.');
-    } finally { setSel(0); setLoading(false); }
+    const r = await fetch('/api/recipes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt, info }) });
+    const d = await r.json();
+    setPlans(d.plans); setNotice(d.notice ?? '');
+    setSel(0); setLoading(false);
   };
 
   const updatePlan = (np: DesignPlan) => setPlans((ps) => ps.map((p, i) => (i === sel ? np : p)));

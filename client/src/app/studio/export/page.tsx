@@ -7,7 +7,7 @@ import { checkPlan } from '@/core/validator/check';
 export default function Step4() {
   const { plan, person, info } = useStudio();
   if (!plan) return <p className="pt-10 text-neutral-400">Nothing to export yet. Create drafts first.</p>;
-  const issues = checkPlan(plan);
+  const issues = typeof plan === 'object' && plan.elements ? checkPlan(plan) : [];
   return (
     <section className="space-y-5 pt-6">
       <p className="text-sm text-violet-400">Step 4 of 4</p>
