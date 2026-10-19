@@ -1,5 +1,5 @@
 export type Role = 'participant' | 'organizer' | 'mentor' | 'volunteer' | 'executive';
-export type FieldKey = 'name' | 'role' | 'roll' | 'department' | 'year' | 'photo' | 'qr';
+export type FieldKey = 'name' | 'role' | 'roll' | 'department' | 'year' | 'photo' | 'qr' | 'team';
 
 export interface Person {
   name: string;
@@ -8,6 +8,21 @@ export interface Person {
   department?: string;
   year?: string;
   photo?: string | null; // data URL; missing -> initials circle
+  team?: string;
+}
+
+export interface Signatory {
+  name: string;
+  title: string;
+  signatureImage?: string | null;
+}
+
+export interface CertificateRecipient {
+  name: string;
+  certificateRole: string; // Exact title (e.g. "1st Place", "Runner Up", "Participant", "Organizer")
+  team?: string;
+  roll_no?: string;
+  department?: string;
 }
 
 // Only what the user told us. Anything undefined is still unknown and must be asked.
@@ -20,9 +35,10 @@ export interface EventInfo {
   hasPhotos?: boolean;
   customPreviewPhoto?: boolean;
   previewPhoto?: string | null;
+  signatories?: Signatory[];
 }
 
-export type TextSlot = 'name' | 'role' | 'id' | 'event' | 'department' | 'year' | 'date' | 'venue' | 'tagline';
+export type TextSlot = 'name' | 'role' | 'id' | 'event' | 'department' | 'year' | 'date' | 'venue' | 'tagline' | 'team';
 export type ImageSlot = 'photo' | 'logo_acm' | 'logo_svnit';
 
 export type Element =
@@ -41,5 +57,6 @@ export interface DesignPlan {
   size: { w: number; h: number }; // mm
   elements: Element[];
   svg?: string;
+  docType?: 'badge' | 'certificate';
 }
 

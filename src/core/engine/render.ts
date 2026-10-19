@@ -32,6 +32,7 @@ export function renderCard(plan: DesignPlan, person: Person, info: EventInfo, ui
     name: person.name, role: person.role.toUpperCase(), id: person.id,
     event: info.name ?? '', department: person.department ?? '', year: person.year ?? '',
     date: info.date ?? '', venue: info.venue ?? '', tagline: info.tagline ?? '',
+    team: (person.role === 'participant' ? person.team : '') ?? '',
   };
   const photo = person.photo && (/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/.test(person.photo) || person.photo.startsWith('/') || person.photo.startsWith('http')) ? person.photo : null;
   const qrVal = `${QR_BASE}?roll=${encodeURIComponent(person.id)}`;

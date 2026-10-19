@@ -6,8 +6,8 @@ import { missing } from '@/core/ai/intake';
 import { FIELD_OPTIONS } from '@/lib/constants';
 import { FieldKey } from '@/types';
 
-const GREETING: Msg = { from: 'bot', text: 'Tell me what you need, for example: "Horror themed ID cards for our 24-hour hackathon on 18 October at SVNIT". I will ask for anything missing.' };
-const IDEAS = ['Retro 80s arcade', 'Horror theme', 'Minimal and clean', 'Corporate blue', 'Nature and green', 'Festive and warm'];
+const GREETING: Msg = { from: 'bot', text: 'Tell me what you need, for example: "AI / ML themed ID cards for our 24-hour hackathon on 18 October at SVNIT". I will ask for anything missing.' };
+const IDEAS = ['AI / ML', 'Cybersecurity', 'Web Dev', 'Data Science', 'Cloud / DevOps', 'Open Source', 'Default / Academic', 'Minimal & clean'];
 
 async function toDataUri(file: File, max = 500): Promise<string> {
   const url = URL.createObjectURL(file);
