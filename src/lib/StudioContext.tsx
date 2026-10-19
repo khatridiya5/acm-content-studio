@@ -55,9 +55,15 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => {
     if (!ready) return;
-    const base = { prompt, info, msgs, plans, sel, pi, isSample };
-    try { sessionStorage.setItem('studio2', JSON.stringify({ ...base, people })); }
-    catch { try { sessionStorage.setItem('studio2', JSON.stringify({ ...base, people: people.map((p) => ({ ...p, photo: null })) })); } catch { } }
+    const timer = setTimeout(() => {
+      const base = { prompt, info, msgs, plans, sel, pi, isSample };
+      // Strip base64 data URIs from people to prevent exceeding sessionStorage quota and freezing the UI
+      const safePeople = people.map((p) => (p.photo?.startsWith('data:') ? { ...p, photo: null } : p));
+      try {
+        sessionStorage.setItem('studio2', JSON.stringify({ ...base, people: safePeople }));
+      } catch { }
+    }, 300);
+    return () => clearTimeout(timer);
   }, [ready, prompt, info, msgs, plans, sel, pi, people, isSample]);
 
   const loadPeople = (p: Person[]) => { setPeople(p); setIsSample(false); setPi(0); };
@@ -76,13 +82,14 @@ export function StudioProvider({ children }: { children: ReactNode }) {
   const updatePlan = (np: DesignPlan) => setPlans((ps) => ps.map((p, i) => (i === sel ? np : p)));
 
   const refine = async (instruction: string) => {
-    const plan = plans[sel];
+    const targetIndex = sel;
+    const plan = plans[targetIndex];
     if (!plan) return 'No draft selected.';
     try {
       const r = await fetch('/api/refine', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan, instruction }) });
       const d = await r.json();
       if (!r.ok) return d.message ?? 'Could not apply that change.';
-      updatePlan(d.plan);
+      setPlans((ps) => ps.map((p, i) => (i === targetIndex ? d.plan : p)));
       return '';
     } catch { return 'Could not reach the design service.'; }
   };

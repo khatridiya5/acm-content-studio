@@ -2,27 +2,34 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { DesignPlan, EventInfo, FieldKey } from '@/types';
 import { makePlans } from './mock';
+import { extractHeuristicIntake } from './intake';
 
-async function askJson(prompt: string): Promise<Record<string, unknown>> {
+async function askJsonWithTimeout(prompt: string, timeoutMs = 7000): Promise<Record<string, unknown>> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set');
   const model = new GoogleGenerativeAI(key).getGenerativeModel({
-    model: process.env.MODEL || 'gemini-3.8-flash',
-    generationConfig: { responseMimeType: 'application/json', temperature: 0.8 },
+    model: process.env.MODEL || 'gemini-3.5-flash',
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.0 },
   });
-  const res = await model.generateContent(prompt);
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`Gemini JSON request timed out after ${timeoutMs}ms`)), timeoutMs)
+  );
+  const res = await Promise.race([model.generateContent(prompt), timeoutPromise]);
   const text = res.response.text().replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
   return JSON.parse(text);
 }
 
-async function askSvg(prompt: string): Promise<string> {
+async function askSvg(prompt: string, timeoutMs = 45000): Promise<string> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set');
   const model = new GoogleGenerativeAI(key).getGenerativeModel({
-    model: process.env.MODEL || 'gemini-3.8-flash',
+    model: process.env.MODEL || 'gemini-3.5-flash',
     generationConfig: { temperature: 0.8 },
   });
-  const res = await model.generateContent(prompt);
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`Gemini SVG generation timed out after ${timeoutMs}ms`)), timeoutMs)
+  );
+  const res = await Promise.race([model.generateContent(prompt), timeoutPromise]);
   let text = res.response.text().trim();
   // Strip any markdown code blocks
   text = text.replace(/^```(?:xml|svg)?\s*/i, '').replace(/\s*```$/i, '').trim();
@@ -34,11 +41,25 @@ async function askSvg(prompt: string): Promise<string> {
   return text;
 }
 
-export async function extractIntake(text: string) {
+export async function extractIntake(text: string): Promise<Record<string, unknown>> {
+  const fastHeuristic = extractHeuristicIntake(text);
   const prompt = `Read this request for ID cards and extract ONLY what is explicitly written. Copy words exactly as written. Use null for anything not stated. Never guess.
 Return JSON: {"name": event name or null, "date": null or text, "venue": null or text, "tagline": null or text, "fields": array of any of ["name","role","roll","department","year","photo","qr"] that the user clearly asked to show, or null}
 Request: """${text}"""`;
-  return askJson(prompt);
+
+  try {
+    const aiResult = await askJsonWithTimeout(prompt, 7000);
+    return {
+      name: aiResult.name || fastHeuristic.name,
+      date: aiResult.date || fastHeuristic.date,
+      venue: aiResult.venue || fastHeuristic.venue,
+      tagline: aiResult.tagline || fastHeuristic.tagline,
+      fields: Array.isArray(aiResult.fields) && aiResult.fields.length ? aiResult.fields : fastHeuristic.fields,
+    };
+  } catch (err) {
+    console.warn('[Gemini] extractIntake timed out or failed, using fast heuristic extraction:', err instanceof Error ? err.message : err);
+    return fastHeuristic;
+  }
 }
 
 function getDynamicPlaceholders(fields?: FieldKey[], hasPhotos?: boolean): string {
@@ -126,7 +147,7 @@ Do not add any other {{placeholders}} and do not replace these with sample data.
   ];
 
   if (process.env.GEMINI_API_KEY) {
-    console.log(`[Gemini] Requesting 3 design variations for event: "${eventName}", theme: "${theme.slice(0, 80)}" using model: ${process.env.MODEL || 'gemini-3.8-flash'}`);
+    console.log(`[Gemini] Requesting 3 design variations for event: "${eventName}", theme: "${theme.slice(0, 80)}" using model: ${process.env.MODEL || 'gemini-3.5-flash'}`);
     const results = await Promise.allSettled(variations.map((p) => askSvg(p)));
     for (let i = 0; i < results.length; i++) {
       const res = results[i];
@@ -176,22 +197,38 @@ Do not add any other {{placeholders}} and do not replace these with sample data.
 }
 
 export async function refinePlan(plan: DesignPlan | string, instruction: string): Promise<DesignPlan> {
-
   const currentSvg = typeof plan === 'string' ? plan : plan.svg || '';
   if (!currentSvg) {
     throw new Error('No SVG content available to refine.');
   }
 
-  const prompt = `You edit an ID card SVG file.
-Current SVG:
+  console.log(`[refinePlan] Processing instruction: "${instruction}"`);
+
+  const prompt = `You are an expert graphic designer editing a portrait ID card SVG (54mm × 86mm, viewBox="0 0 54 86").
+
+CURRENT SVG:
 ${currentSvg}
 
-Change request: """${instruction}"""
-Apply ONLY what was requested. Return ONLY the updated self-contained raw SVG code, with no explanation and no markdown fences.`;
+CHANGE REQUEST:
+"""${instruction}"""
+
+CRITICAL RULES:
+1. You MUST apply the requested modifications directly to the SVG elements (e.g. adjust colors, fills, gradients, positions, layout, font sizes, background, or element hierarchy).
+2. Make the requested visual edits boldly and accurately according to the user's intent. Do NOT return the SVG unmodified.
+3. Preserve existing dynamic placeholders: {{name}}, {{position}}, {{roll_no}}, {{department}}, {{year}}, {{photo}}, {{qr}} exactly as written.
+4. Preserve official logo paths: /brand/acm_logo.png and /brand/svnit_logo.jpg.
+5. Maintain standard CR80 badge dimensions: width="54mm" height="86mm" viewBox="0 0 54 86".
+6. Return ONLY the complete, self-contained raw SVG code with no markdown fences, comments, or explanations.`;
 
   const updatedSvg = await askSvg(prompt);
   if (!updatedSvg.includes('<svg') || !updatedSvg.includes('</svg>')) {
     throw new Error('Gemini gave an invalid SVG response when refining.');
+  }
+
+  const changed = currentSvg.trim() !== updatedSvg.trim();
+  console.log(`[refinePlan] Refinement completed. Did SVG change? ${changed}`);
+  if (!changed) {
+    console.warn('[refinePlan] Warning: Gemini returned identical SVG content.');
   }
 
   if (typeof plan === 'string') {
