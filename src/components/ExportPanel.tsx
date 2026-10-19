@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useStudio } from '@/lib/StudioContext';
 import { renderCard } from '@/core/engine/render';
 import { hydrateCard, generateBulkCards } from '@/core/engine/hydrate';
@@ -150,6 +151,22 @@ export default function ExportPanel() {
 
       {progress && !err && <p className="text-xs text-emerald-400">{progress}</p>}
       {err && <p className="text-xs text-red-400">{err}</p>}
+
+      {/* Cross-Promotion: Make Certificates for this event */}
+      <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-amber-200">Event finished? Create Certificates!</h3>
+          <p className="text-xs text-amber-300/80 mt-0.5">
+            Reuse the same event details to generate print-ready A4 Certificates of Excellence &amp; Participation.
+          </p>
+        </div>
+        <Link
+          href="/studio/certificate"
+          className="rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-500 transition shadow-sm"
+        >
+          Create Certificates →
+        </Link>
+      </div>
     </div>
   );
 }
