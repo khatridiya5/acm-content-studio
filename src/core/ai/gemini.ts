@@ -1,28 +1,58 @@
-// Server-only. Keep GEMINI_API_KEY in client/.env.local.
+// Server-only. Keep GEMINI_API_KEY in .env.local (same folder as package.json).
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { DesignPlan, EventInfo, FieldKey } from '@/types';
 import { makePlans } from './mock';
 
-async function askJson(prompt: string): Promise<Record<string, unknown>> {
+// Primary model first, then a fallback if the primary stays overloaded.
+// Set MODEL / FALLBACK_MODEL in .env.local to change them without editing code.
+const MODELS = [
+  process.env.MODEL || 'gemini-3.8-flash',
+  process.env.FALLBACK_MODEL || 'gemini-2.5-flash', // check AI Studio for a valid model name
+];
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Calls Gemini with retry + exponential backoff on 503/429,
+// then moves on to the next model in MODELS.
+async function generateWithRetry(
+  prompt: string,
+  generationConfig: Record<string, unknown>
+) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set');
-  const model = new GoogleGenerativeAI(key).getGenerativeModel({
-    model: process.env.MODEL || 'gemini-3.8-flash',
-    generationConfig: { responseMimeType: 'application/json', temperature: 0.8 },
+  const genAI = new GoogleGenerativeAI(key);
+
+  let lastErr: unknown;
+  for (const modelName of MODELS) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName, generationConfig });
+        return await model.generateContent(prompt);
+      } catch (err: any) {
+        lastErr = err;
+        if (err?.status === 404) break;
+        const retryable = err?.status === 503 || err?.status === 429;
+        if (!retryable) throw err;
+        console.warn(`[Gemini] ${modelName} returned ${err.status}, retry ${attempt + 1}/3`);
+        await sleep(1000 * 2 ** attempt + Math.random() * 500); // ~1s, 2s, 4s
+      }
+    }
+    console.warn(`[Gemini] ${modelName} still unavailable, trying next model if any.`);
+  }
+  throw lastErr;
+}
+
+async function askJson(prompt: string): Promise<Record<string, unknown>> {
+  const res = await generateWithRetry(prompt, {
+    responseMimeType: 'application/json',
+    temperature: 0.8,
   });
-  const res = await model.generateContent(prompt);
   const text = res.response.text().replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
   return JSON.parse(text);
 }
 
 async function askSvg(prompt: string): Promise<string> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error('GEMINI_API_KEY is not set');
-  const model = new GoogleGenerativeAI(key).getGenerativeModel({
-    model: process.env.MODEL || 'gemini-3.8-flash',
-    generationConfig: { temperature: 0.8 },
-  });
-  const res = await model.generateContent(prompt);
+  const res = await generateWithRetry(prompt, { temperature: 0.8 });
   let text = res.response.text().trim();
   // Strip any markdown code blocks
   text = text.replace(/^```(?:xml|svg)?\s*/i, '').replace(/\s*```$/i, '').trim();
@@ -126,8 +156,11 @@ Do not add any other {{placeholders}} and do not replace these with sample data.
   ];
 
   if (process.env.GEMINI_API_KEY) {
-    console.log(`[Gemini] Requesting 3 design variations for event: "${eventName}", theme: "${theme.slice(0, 80)}" using model: ${process.env.MODEL || 'gemini-3.8-flash'}`);
-    const results = await Promise.allSettled(variations.map((p) => askSvg(p)));
+    console.log(`[Gemini] Requesting 3 design variations for event: "${eventName}", theme: "${theme.slice(0, 80)}" using model: ${MODELS[0]} (fallback: ${MODELS[1]})`);
+    const results: PromiseSettledResult<string>[] = [];
+    for (const p of variations) {
+      results.push(...(await Promise.allSettled([askSvg(p)])));
+    }
     for (let i = 0; i < results.length; i++) {
       const res = results[i];
       if (res.status === 'fulfilled' && res.value && res.value.includes('<svg') && res.value.includes('</svg>')) {
