@@ -68,6 +68,14 @@ export const THEMES: ThemeDefinition[] = [
     L: ['#f6f6f3', '#1c1c1a', '#1a7f37', '#8250df', '#d0d7de'],
     D: ['#0d1117', '#e6edf3', '#3fb950', '#a371f7', '#30363d'],
   },
+  {
+    id: 'minimal',
+    name: 'Minimal (Black & White)',
+    font: 'Helvetica, Arial, sans-serif',
+    keywords: ['minimal', 'clean', 'simple', 'white', 'black', 'bw', 'monochrome', 'black & white'],
+    L: ['#ffffff', '#000000', '#111111', '#444444', '#e5e7eb'],
+    D: ['#09090b', '#ffffff', '#f4f4f5', '#a1a1aa', '#27272a'],
+  },
 ];
 
 const R = (i: number) => Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
@@ -142,6 +150,14 @@ function renderDecor(themeId: string, p: { a: string; b: string; ln: string; bg:
       <path d="M28 260 C28 290 64 280 64 310 V370 C64 400 28 390 28 420" stroke="${p.b}" stroke-width="3" fill="none"/>
       ${commits}
       <circle cx="64" cy="340" r="6" fill="${p.bg}" stroke="${p.b}" stroke-width="2.5"/>
+    </g>`;
+  }
+
+  if (themeId === 'minimal') {
+    return `<g opacity="0.14">
+      <circle cx="561.5" cy="397" r="320" fill="none" stroke="${p.a}" stroke-width="0.8" stroke-dasharray="6,6"/>
+      <circle cx="561.5" cy="397" r="340" fill="none" stroke="${p.b}" stroke-width="0.5"/>
+      <circle cx="561.5" cy="397" r="180" fill="none" stroke="${p.a}" stroke-width="0.4" stroke-dasharray="2,8"/>
     </g>`;
   }
 
@@ -355,11 +371,11 @@ export function makeCertificatePlans(userPrompt: string = '', info: EventInfo = 
   <text x="995" y="718" font-family="'IBM Plex Mono', monospace" font-size="10" text-anchor="middle" fill="${pD.ink}" opacity="0.75">SCAN TO VERIFY</text>`;
 
   const designs = [
-    { style: `classic-ivory (${theme.name})`, font: theme.font, svg: wrapSvg(pL.bg, inner1) },
-    { style: `editorial-white (${theme.name})`, font: theme.font, svg: wrapSvg(pL.bg, inner2) },
-    { style: `night-slate (${theme.name})`, font: theme.font, svg: wrapSvg(pD.bg, inner3) },
-    { style: `geometric-blue (${theme.name})`, font: theme.font, svg: wrapSvg(pL.bg, inner4) },
-    { style: `blueprint (${theme.name})`, font: theme.font, svg: wrapSvg(pD.bg, inner5) },
+    { style: `Classic Ivory (${theme.name})`, font: theme.font, svg: wrapSvg(pL.bg, inner1) },
+    { style: `Editorial White (${theme.name})`, font: theme.font, svg: wrapSvg(pL.bg, inner2) },
+    { style: `Night Slate (${theme.name})`, font: theme.font, svg: wrapSvg(pD.bg, inner3) },
+    { style: `Geometric Blue (${theme.name})`, font: theme.font, svg: wrapSvg(pL.bg, inner4) },
+    { style: `Blueprint (${theme.name})`, font: theme.font, svg: wrapSvg(pD.bg, inner5) },
   ];
 
   return designs.map((d) => ({

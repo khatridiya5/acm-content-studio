@@ -33,8 +33,8 @@ export default function CertificateDraftPicker({ plans, selected, onSelect, reci
               className="w-full aspect-[297/210] overflow-hidden rounded-lg bg-neutral-900 border border-white/5 shadow-md [&_svg]:h-auto [&_svg]:w-full"
               dangerouslySetInnerHTML={{ __html: svgContent }}
             />
-            <div className="mt-2 flex items-center justify-between text-xs px-1">
-              <span className={`font-semibold capitalize truncate max-w-[190px] ${isSel ? 'text-amber-400' : 'text-neutral-300'}`}>
+            <div className="mt-2 flex items-center justify-between text-xs px-1 gap-2">
+              <span className={`font-semibold truncate ${isSel ? 'text-amber-400' : 'text-neutral-300'}`}>
                 {p.style.replace(/^(?:cert_)?draft_/, 'Style ').replace(/[-_]/g, ' ')}
               </span>
               <span className={`text-[10px] rounded px-1.5 py-0.5 shrink-0 ${isSel ? 'bg-amber-500/20 text-amber-300' : 'bg-white/10 text-neutral-400'}`}>
