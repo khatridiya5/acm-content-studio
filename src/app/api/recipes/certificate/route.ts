@@ -1,5 +1,7 @@
 import { generateCertificatePlans } from '@/core/ai/gemini';
 
+export const maxDuration = 60;   // NEW
+
 export async function POST(req: Request) {
   const { prompt, info } = await req.json();
   const safePrompt = typeof prompt === 'string' && prompt.trim() ? prompt.slice(0, 2000) : 'Formal certificate';

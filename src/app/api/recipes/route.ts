@@ -1,5 +1,7 @@
 import { generatePlans } from '@/core/ai/gemini';
 
+export const maxDuration = 60;   // NEW
+
 export async function POST(req: Request) {
   const { prompt, info } = await req.json();
   if (!prompt || typeof prompt !== 'string') {
