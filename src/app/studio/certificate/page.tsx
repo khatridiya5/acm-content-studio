@@ -12,6 +12,7 @@ const THEME_IDEAS = [
   'Cloud / DevOps',
   'Open Source',
   'Default / Academic',
+  'Minimal (Black & White)',
 ];
 
 function formatInitialDate(raw?: string): string {

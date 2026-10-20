@@ -1,12 +1,17 @@
-import { generateCertificatePlans } from '@/core/ai/gemini';
+import { makeCertificatePlans } from '@/core/ai/certificate';
 
 export async function POST(req: Request) {
   const { prompt, info } = await req.json();
-  const safePrompt = typeof prompt === 'string' && prompt.trim() ? prompt.slice(0, 2000) : 'Formal certificate';
+  const safePrompt = typeof prompt === 'string' && prompt.trim() ? prompt.slice(0, 2000) : 'Default';
 
-  console.log('[POST /api/recipes/certificate] Request received. Prompt:', safePrompt.slice(0, 120), '| Info:', info);
-  const result = await generateCertificatePlans(safePrompt, info ?? {});
-  console.log('[POST /api/recipes/certificate] Generated plans source:', result.source, '| Plan count:', result.plans?.length, '| Notice:', result.notice || 'none');
+  console.log('[POST /api/recipes/certificate] Serving pre-feeded theme templates directly. Selected theme/prompt:', safePrompt.slice(0, 120));
+  const plans = makeCertificatePlans(safePrompt, info ?? {});
+  console.log('[POST /api/recipes/certificate] Returned variants count:', plans.length);
 
-  return Response.json(result);
+  return Response.json({
+    plans,
+    source: 'pre-feeded',
+    notice: '',
+  });
 }
+

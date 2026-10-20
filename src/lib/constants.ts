@@ -38,6 +38,7 @@ export const CERTIFICATE_THEMES = [
   { id: 'data', name: 'Data Science', keywords: ['data', 'analytics', 'statistics', 'bi', 'big data', 'pandas'] },
   { id: 'cloud', name: 'Cloud / DevOps', keywords: ['cloud', 'devops', 'aws', 'docker', 'kubernetes', 'infra', 'azure', 'gcp'] },
   { id: 'opensource', name: 'Open Source', keywords: ['open source', 'git', 'github', 'foss', 'community', 'contribution'] },
+  { id: 'minimal', name: 'Minimal (Black & White)', keywords: ['minimal', 'clean', 'simple', 'white', 'black', 'bw', 'monochrome', 'black & white'] },
 ];
 
 export const SAMPLE_CERTIFICATE_RECIPIENTS: CertificateRecipient[] = [
